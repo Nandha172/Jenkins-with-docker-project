@@ -21,9 +21,8 @@ pipeline {
             steps {
                 script {
                     echo "Cloning repository..."
-                    sh "rm -rf My-docker-with-jenkinsproject || true"
                     sh "git clone $GIT_REPO"
-                    sh "cd My-docker-with-jenkinsproject"
+                    sh "cd docker-jenkins-project"
                 }
             }
         }
