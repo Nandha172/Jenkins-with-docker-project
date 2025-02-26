@@ -4,7 +4,7 @@ pipeline {
     environment {
         DOCKER_IMAGE = "nandha172/flask-app"  // Docker Hub username added for push
         CONTAINER_NAME = "flaskapp"
-        GIT_REPO = "https://github.com/Nandha172/My-docker-with-jenkinsproject.git"
+        GIT_REPO = "https://github.com/Nandha172/Jenkins-with-docker-project.git"
     }
 
     stages {
