@@ -2,13 +2,12 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "flask-app"  // Your image name
-        CONTAINER_NAME = "flaskapp" // Your container name
-        GIT_REPO = "https://github.com/Nandha172/Jenkins-with-docker-project.git"
+        DOCKER_IMAGE = "nandha172/flask-app"  // Docker Hub username added for push
+        CONTAINER_NAME = "flaskapp"
+        GIT_REPO = "https://github.com/Nandha172/My-docker-with-jenkinsproject.git"
     }
 
     stages {
-
         stage('Check Environment') {
             steps {
                 script {
@@ -20,9 +19,9 @@ pipeline {
         stage('Clone Repository') {
             steps {
                 script {
-                    echo "Cloning repository..."
+                    echo "Cleaning old repo and cloning..."
+                    sh "rm -rf Jenkins-with-docker-project || true"
                     sh "git clone $GIT_REPO"
-                    sh "cd docker-jenkins-project"
                 }
             }
         }
@@ -31,7 +30,7 @@ pipeline {
             steps {
                 script {
                     echo "Building Docker Image: $DOCKER_IMAGE"
-                    sh "docker build -t $DOCKER_IMAGE My-docker-with-jenkinsproject/"
+                    sh "docker build -t $DOCKER_IMAGE Jenkins-with-docker-project/"
                 }
             }
         }
@@ -39,8 +38,10 @@ pipeline {
         stage('Login to Docker Hub') {
             steps {
                 script {
-                    echo "Logging into Docker Hub using Jenkins Global Credentials..."
-                    sh 'docker login'
+                    echo "Logging into Docker Hub..."
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                        sh 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin'
+                    }
                 }
             }
         }
@@ -75,10 +76,13 @@ pipeline {
                         docker rm $CONTAINER_NAME || true
                     fi
 
-                    # Remove existing image to ensure fresh pull
+                    # Remove existing image
                     docker rmi -f $DOCKER_IMAGE || true
 
-                    # Pull latest image and run
+                    # Pull latest image from Docker Hub
+                    docker pull $DOCKER_IMAGE
+
+                    # Run the new container
                     echo "Running new container..."
                     docker run -d --name $CONTAINER_NAME -p 5000:5000 $DOCKER_IMAGE
                     """
