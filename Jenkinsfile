@@ -15,18 +15,18 @@ pipeline {
                 }
             }
         }
-        stages {
+
         stage('Login to Docker Hub') {
             steps {
                 script {
-                    withCredentials([usernamePassword(credentialsId: 'Docker_hub_credentials', 
+                    withCredentials([usernamePassword(credentialsId: 'Docker_hub_credentials',
                     usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PAT')]) {
                         sh "echo $DOCKER_PAT | docker login -u $DOCKER_USER --password-stdin"
                     }
                 }
             }
         }
- 
+
         stage('Clone Repository') {
             steps {
                 script {
