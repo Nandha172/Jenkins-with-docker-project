@@ -2,9 +2,10 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "nandha172/flask-app"  // Docker Hub username added for push
+        DOCKER_IMAGE = "nandha172/flask-app"  // Ensure correct Docker Hub username and repo
         CONTAINER_NAME = "flaskapp"
         GIT_REPO = "https://github.com/Nandha172/Jenkins-with-docker-project.git"
+        GIT_BRANCH = "main" // Add branch specification
     }
 
     stages {
@@ -19,13 +20,12 @@ pipeline {
         stage('Login to Docker Hub') {
             steps {
                 script {
-                    withCredentials([usernamePassword(credentialsId: 'Docker_hub_credentials',
-		        usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PAT')]) {
-                            sh '''
-                            echo "$DOCKER_PAT" | docker login -u "$DOCKER_USER" --password-stdin
-                            '''
+                    withCredentials([usernamePassword(
+                        credentialsId: 'Docker_hub_credentials', 
+                        usernameVariable: 'DOCKER_USER', 
+                        passwordVariable: 'DOCKER_PAT')]) {
+                            sh 'echo "$DOCKER_PAT" | docker login -u "$DOCKER_USER" --password-stdin'                   
                     }
-
                 }
             }
         }
@@ -35,7 +35,7 @@ pipeline {
                 script {
                     echo "Cleaning old repo and cloning..."
                     sh "rm -rf Jenkins-with-docker-project || true"
-                    sh "git clone $GIT_REPO"
+                    sh "git clone -b $GIT_BRANCH $GIT_REPO"
                 }
             }
         }
@@ -71,24 +71,24 @@ pipeline {
             steps {
                 script {
                     echo "Deploying container: $CONTAINER_NAME"
-                    sh """
+                    sh '''
                     # Stop and remove existing container if running
-                    if [ \$(docker ps -q -f name=$CONTAINER_NAME) ]; then
+                    if [ $(docker ps -q -f name=$CONTAINER_NAME) ]; then
                         echo "Stopping existing container..."
                         docker stop $CONTAINER_NAME || true
                         docker rm $CONTAINER_NAME || true
                     fi
-
+                    
                     # Remove existing image
                     docker rmi -f $DOCKER_IMAGE || true
-
+                    
                     # Pull latest image from Docker Hub
                     docker pull $DOCKER_IMAGE
-
+                    
                     # Run the new container
                     echo "Running new container..."
                     docker run -d --name $CONTAINER_NAME -p 5000:5000 $DOCKER_IMAGE
-                    """
+                    '''
                 }
             }
         }
