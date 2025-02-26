@@ -15,7 +15,18 @@ pipeline {
                 }
             }
         }
-
+        stages {
+        stage('Login to Docker Hub') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'Docker_hub_credentials', 
+                    usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PAT')]) {
+                        sh "echo $DOCKER_PAT | docker login -u $DOCKER_USER --password-stdin"
+                    }
+                }
+            }
+        }
+ 
         stage('Clone Repository') {
             steps {
                 script {
@@ -34,19 +45,6 @@ pipeline {
                 }
             }
         }
-
-	stage('Login to Docker Hub') {
-           steps {
-              script {
-                 echo "Logging into Docker Hub..."
-                 withCredentials([usernamePassword(credentialsId: 'PAT', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                 sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
-		 }
-
-              }
-           }
-        }
-
 
         stage('Push Image to Docker Hub') {
             steps {
