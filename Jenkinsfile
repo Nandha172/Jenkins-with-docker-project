@@ -2,10 +2,10 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "nandha172/flask-app"  // Ensure correct Docker Hub username and repo
+        DOCKER_IMAGE = "nandha172/flask-app"
         CONTAINER_NAME = "flaskapp"
         GIT_REPO = "https://github.com/Nandha172/Jenkins-with-docker-project.git"
-        GIT_BRANCH = "main" // Add branch specification
+        GIT_BRANCH = "master" // Replace with your actual branch name
     }
 
     stages {
@@ -21,10 +21,14 @@ pipeline {
             steps {
                 script {
                     withCredentials([usernamePassword(
-                        credentialsId: 'docker-hub-credential', 
+                        credentialsId: 'docker-hub-credentials', 
                         usernameVariable: 'DOCKER_USER', 
-                        passwordVariable: 'DOCKER_PAT')]) {
-                            sh 'echo "$DOCKER_PAT" | docker login -u "$DOCKER_USER" --password-stdin'                   
+                        passwordVariable: 'DOCKER_PAT'
+                    )]) {
+                        sh '''
+                        echo "$DOCKER_PAT" | docker login -u "$DOCKER_USER" --password-stdin || exit 1
+                        echo "Docker login successful!"
+                        '''
                     }
                 }
             }
@@ -34,8 +38,10 @@ pipeline {
             steps {
                 script {
                     echo "Cleaning old repo and cloning..."
-                    sh "rm -rf Jenkins-with-docker-project || true"
-                    sh "git clone -b $GIT_BRANCH $GIT_REPO"
+                    sh '''
+                    rm -rf Jenkins-with-docker-project || true
+                    git clone -b $GIT_BRANCH $GIT_REPO || exit 1
+                    '''
                 }
             }
         }
@@ -44,7 +50,9 @@ pipeline {
             steps {
                 script {
                     echo "Building Docker Image: $DOCKER_IMAGE"
-                    sh "docker build -t $DOCKER_IMAGE Jenkins-with-docker-project/"
+                    sh '''
+                    docker build -t $DOCKER_IMAGE Jenkins-with-docker-project/ || exit 1
+                    '''
                 }
             }
         }
@@ -53,7 +61,9 @@ pipeline {
             steps {
                 script {
                     echo "Pushing image: $DOCKER_IMAGE"
-                    sh "docker push $DOCKER_IMAGE"
+                    sh '''
+                    docker push $DOCKER_IMAGE || exit 1
+                    '''
                 }
             }
         }
@@ -72,22 +82,16 @@ pipeline {
                 script {
                     echo "Deploying container: $CONTAINER_NAME"
                     sh '''
-                    # Stop and remove existing container if running
                     if [ $(docker ps -q -f name=$CONTAINER_NAME) ]; then
-                        echo "Stopping existing container..."
                         docker stop $CONTAINER_NAME || true
                         docker rm $CONTAINER_NAME || true
                     fi
-                    
-                    # Remove existing image
+
                     docker rmi -f $DOCKER_IMAGE || true
-                    
-                    # Pull latest image from Docker Hub
-                    docker pull $DOCKER_IMAGE
-                    
-                    # Run the new container
-                    echo "Running new container..."
-                    docker run -d --name $CONTAINER_NAME -p 5000:5000 $DOCKER_IMAGE
+
+                    docker pull $DOCKER_IMAGE || exit 1
+
+                    docker run -d --name $CONTAINER_NAME -p 5000:5000 $DOCKER_IMAGE || exit 1
                     '''
                 }
             }
@@ -103,4 +107,3 @@ pipeline {
         }
     }
 }
-
