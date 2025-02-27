@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "nandha172/flask-app"
-        CONTAINER_NAME = "flaskapp"
+        DOCKER_IMAGE = "nandhakumar774/flask-app"
+        CONTAINER_NAME = "flaskcontainer"
         GIT_REPO = "https://github.com/Nandha172/Jenkins-with-docker-project.git"
         GIT_BRANCH = "master" // Replace with your actual branch name
     }
@@ -21,7 +21,7 @@ pipeline {
             steps {
                 script {
                     withCredentials([usernamePassword(
-                        credentialsId: 'docker-hub-credential', 
+                        credentialsId: 'docker-credentials', 
                         usernameVariable: 'DOCKER_USER', 
                         passwordVariable: 'DOCKER_PAT'
                     )]) {
