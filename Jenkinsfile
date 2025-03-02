@@ -5,7 +5,7 @@ pipeline {
         DOCKER_IMAGE = "nandhakumar774/flask-app"
         CONTAINER_NAME = "flaskcontainer"
         GIT_REPO = "https://github.com/Nandha172/Jenkins-with-docker-project.git"
-        GIT_BRANCH = "master" // Replace with your actual branch name
+        GIT_BRANCH = "master" // Replace it with your actual branch which you are working on
     }
 
     stages {
