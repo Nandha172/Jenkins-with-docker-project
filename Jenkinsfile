@@ -5,7 +5,7 @@ pipeline {
         DOCKER_IMAGE = "nandhakumar774/flask-app"
         CONTAINER_NAME = "flaskcontainer"
         GIT_REPO = "https://github.com/Nandha172/Jenkins-with-docker-project.git"
-        GIT_BRANCH = "master" // Replace it with your actual branch which you are working on
+        GIT_BRANCH = "master" // Replace with your actual branch
     }
 
     stages {
@@ -21,8 +21,8 @@ pipeline {
             steps {
                 script {
                     withCredentials([usernamePassword(
-                        credentialsId: 'docker-credentials', 
-                        usernameVariable: 'DOCKER_USER', 
+                        credentialsId: 'docker-credentials',
+                        usernameVariable: 'DOCKER_USER',
                         passwordVariable: 'DOCKER_PAT'
                     )]) {
                         sh '''
@@ -81,8 +81,12 @@ pipeline {
             steps {
                 script {
                     echo "Deploying container: $CONTAINER_NAME"
-                    sh '''
-                    if [ $(docker ps -q -f name=$CONTAINER_NAME) ]; then
+
+                    // Generate a random available port (8000-8999)
+                    def randomPort = sh(script: "shuf -i 8000-8999 -n 1", returnStdout: true).trim()
+
+                    sh """
+                    if [ \$(docker ps -q -f name=$CONTAINER_NAME) ]; then
                         docker stop $CONTAINER_NAME || true
                         docker rm $CONTAINER_NAME || true
                     fi
@@ -91,8 +95,10 @@ pipeline {
 
                     docker pull $DOCKER_IMAGE || exit 1
 
-                    docker run -d --name $CONTAINER_NAME -p 5000:5000 $DOCKER_IMAGE || exit 1
-                    '''
+                    docker run -d --name $CONTAINER_NAME -p ${randomPort}:5000 $DOCKER_IMAGE || exit 1
+
+                    echo "Container running on port ${randomPort}"
+                    """
                 }
             }
         }
@@ -107,3 +113,4 @@ pipeline {
         }
     }
 }
+
